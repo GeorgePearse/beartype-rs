@@ -11,7 +11,22 @@ name = "_beartype_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.22", features = ["extension-module"] }
+# `extension-module` is deliberately NOT enabled here: it is added at build time by
+# maturin (see `[tool.maturin] features` in pyproject.toml), which is what actually
+# produces the importable Python extension. Keeping it off by default lets `cargo
+# test`'s dev-dependency below enable `auto-initialize` instead - the two are mutually
+# exclusive ways of getting a `Python` GIL token (one embeds+links libpython for a
+# standalone binary/test, the other defers entirely to the host interpreter that
+# dlopen()s the .so) and Cargo's feature unification would otherwise try to turn both
+# on at once for `cargo test`.
+pyo3 = { version = "0.22" }
+
+[dev-dependencies]
+# Rust-level `#[cfg(test)]` unit tests call `Python::with_gil`, which needs a real
+# embedded interpreter rather than the `extension-module` "loaded by Python" model -
+# `auto-initialize` gets `cargo test` a working GIL via the `.venv` pointed to by
+# `PYO3_PYTHON` in `.cargo/config.toml`.
+pyo3 = { version = "0.22", features = ["auto-initialize"] }
 
 [profile.release]
 lto = true
