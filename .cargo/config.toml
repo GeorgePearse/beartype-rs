@@ -1,0 +1,5 @@
+[env]
+# PyO3's build script otherwise picks up whichever `python3` is first on PATH, which on
+# this machine is newer than PyO3 0.22 supports. Point it at the project's venv so
+# `cargo build`/`cargo test` match what `maturin develop` already uses.
+PYO3_PYTHON = { value = ".venv/bin/python", relative = true }

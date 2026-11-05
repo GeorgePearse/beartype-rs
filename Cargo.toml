@@ -1,0 +1,17 @@
+[package]
+name = "beartype-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Rust-accelerated runtime type checking for Python, in the spirit of beartype"
+license = "MIT"
+repository = "https://github.com/GeorgePearse/beartype-rs"
+
+[lib]
+name = "_beartype_rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module"] }
+
+[profile.release]
+lto = true
