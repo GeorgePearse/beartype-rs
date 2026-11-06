@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # Keep in sync with the version PyO3 0.22 supports (see Cargo.toml comment
+          # and .cargo/config.toml) - anything newer currently fails to build.
+          python-version: "3.13"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Create virtualenv
+        # .cargo/config.toml points PYO3_PYTHON at ".venv/bin/python" (relative to
+        # the repo root) for `cargo test`'s embedded interpreter, so the venv must
+        # live at this exact path.
+        run: python -m venv .venv
+
+      - name: Install maturin
+        run: |
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install maturin
+
+      - name: Build extension (maturin develop)
+        run: |
+          source .venv/bin/activate
+          maturin develop
+
+      - name: Run Rust tests
+        run: cargo test
+
+      - name: Run Python tests
+        run: |
+          source .venv/bin/activate
+          python -m pip install pytest
+          python -m pytest tests/ -q
