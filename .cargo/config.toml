@@ -1,0 +1,18 @@
+[env]
+# PyO3's build script otherwise picks up whichever `python3` is first on PATH, which on
+# this machine is newer than PyO3 0.22 supports. Point it at the project's venv so
+# `cargo build`/`cargo test` match what `maturin develop` already uses.
+PYO3_PYTHON = { value = ".venv/bin/python", relative = true }
+
+# The `extension-module` feature deliberately does not link against libpython (the
+# symbols are provided by the Python interpreter that dlopen()s this .so/.dylib at
+# import time, per PyO3's docs). `maturin develop` builds with `-undefined
+# dynamic_lookup` under the hood to defer those symbols to load time; plain `cargo
+# build`/`cargo test` do not, and fail with "symbol(s) not found for architecture
+# arm64" on macOS without this. Harmless for `maturin develop` itself, which never
+# reads this flag by a different path.
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
